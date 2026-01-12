@@ -1,0 +1,6 @@
+py -m pip install mediapipe opencv-python tensorflow numpy pandas scikit-learn
+
+
+
+Advanced → Environment Variables add + 	C:\Users\pairoj.ta\AppData\Local\Programs\Python\Python311\
+					C:\Users\pairoj.ta\AppData\Local\Programs\Python\Python311\Scripts\
