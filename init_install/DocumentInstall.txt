@@ -1,6 +1,14 @@
-py -m pip install mediapipe opencv-python tensorflow numpy pandas scikit-learn
-
-
+install PY
 
 Advanced → Environment Variables add + 	C:\Users\pairoj.ta\AppData\Local\Programs\Python\Python311\
 					C:\Users\pairoj.ta\AppData\Local\Programs\Python\Python311\Scripts\
+
+py -m pip install mediapipe opencv-python tensorflow numpy pandas scikit-learn
+
+python -m pip uninstall mediapipe -y
+
+python -m pip install mediapipe==0.10.9
+
+python -m pip uninstall protobuf -y
+python -m pip install protobuf==4.25.3
+
