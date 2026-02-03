@@ -1,37 +1,44 @@
-import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelEncoder
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.utils import to_categorical
+import pandas as pd
+from tensorflow import keras
+from tensorflow.keras import layers
+from sklearn.model_selection import train_test_split
 
-df = pd.read_csv("dataset.csv", header=None)
+# ===== load data =====
+df = pd.read_csv("data/hand_landmarks.csv", header=None)
 
-X = df.iloc[:, :-1].values
-y = df.iloc[:, -1].values
+X = df.iloc[:, :-1].values   # 84 ค่า landmark (2 hands × 21 landmarks × 2 coords)
+y = df.iloc[:, -1].values   # label 0-9
 
-encoder = LabelEncoder()
-y_enc = encoder.fit_transform(y)
-y_cat = to_categorical(y_enc)
+# ===== split =====
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
-model = Sequential([
-    Dense(128, activation='relu', input_shape=(63,)),
-    Dense(64, activation='relu'),
-    Dense(len(np.unique(y_enc)), activation='softmax')
+# ===== model =====
+model = keras.Sequential([
+    layers.Input(shape=(84,)),  # 2 hands × 21 landmarks × 2 coordinates
+    layers.Dense(256, activation="relu"),
+    layers.Dense(128, activation="relu"),
+    layers.Dense(64, activation="relu"),
+    layers.Dense(10, activation="softmax")  # 0–9
 ])
 
 model.compile(
-    optimizer='adam',
-    loss='categorical_crossentropy',
-    metrics=['accuracy']
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
 )
 
-model.fit(X, y_cat, epochs=30, batch_size=32)
+# ===== train =====
+model.fit(
+    X_train, y_train,
+    validation_data=(X_test, y_test),
+    epochs=30,
+    batch_size=16
+)
 
-model.save("sign_model.h5")
+# ===== save =====
+model.save("model/hand_model.h5")
 
-with open("labels.txt", "w", encoding="utf-8") as f:
-    for label in encoder.classes_:
-        f.write(label + "\n")
-
-print("Train เสร็จ")
+print("✅ Train เสร็จ และบันทึกโมเดลแล้ว")

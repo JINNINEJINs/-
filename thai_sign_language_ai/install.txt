@@ -1,0 +1,41 @@
+Python 3.11.8
+
+หมายเหตุ: ไฟล์นี้เก็บคำสั่งติดตั้งแพ็กเกจที่โปรเจคใช้งานและคำอธิบายสั้น ๆ เป็นภาษาไทย
+
+1) การสร้างและใช้งาน virtual environment (venv) บน Windows
+- สร้าง venv:
+	python -m venv venv
+- เปิดใช้งาน (PowerShell):
+	.\venv\Scripts\Activate.ps1
+	(หากโดนบล็อก ให้รัน Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process ก่อน)
+- เปิดใช้งาน (CMD):
+	venv\Scripts\activate
+- อัพเกรด pip:
+	python -m pip install --upgrade pip
+
+2) แพ็กเกจที่ใช้ในโปรเจค และคำอธิบายสั้น ๆ
+- numpy==1.26.4 : ไลบรารีจัดการตัวเลขและอาร์เรย์ (arrays) สำหรับการคำนวณและแปลงข้อมูล
+- opencv-python==4.8.1.78 : อ่าน/เขียนภาพและวิดีโอ, ประมวลผลภาพ, จับภาพจากกล้อง
+- mediapipe==0.10.8 : ตรวจจับโครงร่าง/landmarks ของมือและร่างกาย (ใช้ดึงจุดมือ)
+- tensorflow==2.15.0 : เฟรมเวิร์กสำหรับสร้างและฝึกโมเดล deep learning
+- scikit-learn : เครื่องมือ preprocessing, การประเมินผล และอัลกอริทึม ML พื้นฐาน
+- joblib : บันทึก/โหลดอ็อบเจ็กต์ Python ขนาดใหญ่ (เช่น scaler) อย่างมีประสิทธิภาพ
+- pandas : จัดการตารางข้อมูล (CSV/DataFrame) สำหรับการเตรียมข้อมูลฝึก
+
+3) คำสั่งติดตั้งตัวอย่าง (ติดตั้งทีละตัว)
+pip install numpy==1.26.4
+pip install opencv-python==4.8.1.78
+pip install mediapipe==0.10.8
+pip install tensorflow==2.15.0
+pip install scikit-learn joblib
+pip install pandas
+
+4) คำอธิบายการใช้งานในโปรเจคโดยย่อ
+- collect_data.py : ใช้ opencv-python + mediapipe ดึงตำแหน่งจุดบนมือ → เก็บเป็น pandas/numpy → บันทึกเป็น CSV
+- train_model.py : โหลด CSV ด้วย pandas → เตรียมข้อมูล (อาจใช้ scikit-learn) → ฝึกด้วย tensorflow → บันทึกโมเดลและ preprocessing ด้วย joblib
+- run_realtime.py : โหลดโมเดลและ preprocessing → ใช้ opencv-python + mediapipe ทำอินเฟอร์เรนซ์เรียลไทม์
+
+5) ข้อควรระวัง
+- บางแพ็กเกจเช่น tensorflow หรือ mediapipe อาจมีเงื่อนไขพิเศษขึ้นกับระบบ (CPU/GPU) หรือเวอร์ชัน Python หากติดตั้งไม่ผ่าน ให้เก็บข้อความผิดพลาดมาให้ผมช่วยวิเคราะห์
+
+ถ้าต้องการ ผมสามารถสร้าง requirements.txt ให้และรันคำสั่งติดตั้งตัวเดียว หรือช่วยติดตั้งบนเครื่องของคุณได้
