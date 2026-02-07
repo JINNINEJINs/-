@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Hand Translator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <header>
+    ✋ AI Hand Translator
+  </header>
+
+  <div class="camera-box">
+    <video id="camera" autoplay playsinline></video>
+    <div class="overlay" id="gesture">กำลังตรวจจับ...</div>
+  </div>
+
+  <div class="controls">
+    <button onclick="switchCamera()">📷 สลับกล้อง</button>
+    <button>🌐 ภาษา</button>
+    <button>⚙️ ตั้งค่า</button>
+  </div>
+
+  <div class="history">
+    <h3>ผลลัพธ์ล่าสุด</h3>
+    <ul id="historyList"></ul>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
