@@ -1,0 +1,19 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+
+# Virtual environments (ทุกที่ใน repo)
+venv/
+*/venv/
+
+# ===== Node.js =====
+node_modules/
+
+# ===== Model files (ถ้าไม่อยากอัป) =====
+*.h5
+
+# ===== OS / IDE =====
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

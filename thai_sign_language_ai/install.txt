@@ -5,6 +5,7 @@ Python 3.11.8
 1) การสร้างและใช้งาน virtual environment (venv) บน Windows
 - สร้าง venv:
 	python -m venv venv
+หรือ	py -m venv venv
 - เปิดใช้งาน (PowerShell):
 	.\venv\Scripts\Activate.ps1
 	(หากโดนบล็อก ให้รัน Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process ก่อน)
@@ -21,6 +22,7 @@ Python 3.11.8
 - scikit-learn : เครื่องมือ preprocessing, การประเมินผล และอัลกอริทึม ML พื้นฐาน
 - joblib : บันทึก/โหลดอ็อบเจ็กต์ Python ขนาดใหญ่ (เช่น scaler) อย่างมีประสิทธิภาพ
 - pandas : จัดการตารางข้อมูล (CSV/DataFrame) สำหรับการเตรียมข้อมูลฝึก
+- opencv-python :
 
 3) คำสั่งติดตั้งตัวอย่าง (ติดตั้งทีละตัว)
 pip install numpy==1.26.4
@@ -29,6 +31,10 @@ pip install mediapipe==0.10.8
 pip install tensorflow==2.15.0
 pip install scikit-learn joblib
 pip install pandas
+pip install fastapi uvicorn opencv-python
+pip install "uvicorn[standard]"
+
+
 
 4) คำอธิบายการใช้งานในโปรเจคโดยย่อ
 - collect_data.py : ใช้ opencv-python + mediapipe ดึงตำแหน่งจุดบนมือ → เก็บเป็น pandas/numpy → บันทึกเป็น CSV
@@ -39,3 +45,7 @@ pip install pandas
 - บางแพ็กเกจเช่น tensorflow หรือ mediapipe อาจมีเงื่อนไขพิเศษขึ้นกับระบบ (CPU/GPU) หรือเวอร์ชัน Python หากติดตั้งไม่ผ่าน ให้เก็บข้อความผิดพลาดมาให้ผมช่วยวิเคราะห์
 
 ถ้าต้องการ ผมสามารถสร้าง requirements.txt ให้และรันคำสั่งติดตั้งตัวเดียว หรือช่วยติดตั้งบนเครื่องของคุณได้
+ 
+
+6) คำสั่งrun    uvicorn main:app --reload
+
