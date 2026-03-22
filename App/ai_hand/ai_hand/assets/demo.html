@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HandAI Demo – Thai Sign Language</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body {
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            overscroll-behavior: none;
+        }
+        .api-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 6s ease-in-out infinite;
+        }
+        .orb-1 { width: 400px; height: 400px; background: #6366f1; top: -100px; left: -100px; }
+        .orb-2 { width: 300px; height: 300px; background: #8b5cf6; bottom: -80px; right: -80px; animation-delay: 3s; }
+        .orb-3 { width: 200px; height: 200px; background: #06b6d4; top: 50%; left: 50%; animation-delay: 1.5s; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
+        }
+        .glass-card { background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); }
+        .api-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 32px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 460px;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .api-input {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1.5px solid rgba(255,255,255,0.15);
+            border-radius: 14px;
+            padding: 14px 18px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+        .api-input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129,140,248,0.2); }
+        .api-input::placeholder { color: rgba(255,255,255,0.3); }
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            padding: 14px;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
+        .btn-primary:active { transform: translateY(0); }
+        .feature-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 100px;
+            padding: 6px 14px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            font-weight: 600;
+        }
+        /* App Screen */
+        .app-screen { min-height: 100vh; display: flex; flex-direction: column; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+        .app-screen.hidden { display: none !important; }
+        .video-wrapper { position: relative; width: 100%; border-radius: 24px; overflow: hidden; background: #000; aspect-ratio: 4/3; }
+        @media (min-width: 768px) { .video-wrapper { aspect-ratio: 16/9; } }
+        .glass-light { background: rgba(255,255,255,0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); }
+        .mirror { transform: scaleX(-1); }
+        .btn-touch { touch-action: manipulation; transition: all 0.2s; }
+        .btn-touch:active { transform: scale(0.95); }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #6366f1, transparent); animation: scan 2s linear infinite; opacity: 0; transition: opacity 0.3s; }
+        .scan-line.active { opacity: 1; }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 60% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+        .pop { animation: popIn 0.3s ease-out; }
+        .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; display: inline-block; animation: pulse 1.5s ease-in-out infinite; }
+        .status-dot.connected { background: #10b981; }
+        .status-dot.error { background: #ef4444; animation: none; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } }
+    </style>
+</head>
+<body>
+
+<!-- SCREEN 1: API KEY -->
+<div id="apiScreen" class="api-screen">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="api-card">
+        <div class="text-center mb-8">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:20px;margin-bottom:20px;box-shadow:0 12px 32px rgba(99,102,241,0.4);">
+                <svg width="36" height="36" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-extrabold gradient-text mb-1">HandAI</h1>
+            <p style="color:rgba(255,255,255,0.5);font-size:13px;font-weight:600;">Thai Sign Language Detection</p>
+        </div>
+        <div class="flex flex-wrap gap-2 justify-center mb-8">
+            <span class="feature-badge">🎯 Real-time Vision AI</span>
+            <span class="feature-badge">📷 Live Camera</span>
+            <span class="feature-badge">✨ Claude Powered</span>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label style="color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;display:block;margin-bottom:8px;letter-spacing:1.2px;">ANTHROPIC API KEY</label>
+                <input type="password" id="apiKeyInput" class="api-input" placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false"/>
+                <p style="color:rgba(255,255,255,0.3);font-size:11px;margin-top:6px;">Key จะถูกเก็บใน session เท่านั้น</p>
+            </div>
+            <button class="btn-primary" onclick="handleEnter()">Enter App →</button>
+        </div>
+        <div id="apiError" style="display:none;margin-top:12px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 14px;">
+            <p style="color:#fca5a5;font-size:12px;font-weight:600;" id="apiErrorText"></p>
+        </div>
+        <div style="margin-top:20px;text-align:center;">
+            <button onclick="enterDemoMode()" style="color:rgba(255,255,255,0.35);font-size:12px;background:none;border:none;cursor:pointer;font-weight:600;text-decoration:underline;">
+                ไม่มี API Key? ลองโหมด Demo →
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- SCREEN 2: MAIN APP -->
+<div id="appScreen" class="app-screen hidden">
+    <header class="p-4 md:p-6 flex justify-between items-center">
+        <div>
+            <h1 class="text-xl md:text-2xl font-extrabold text-slate-800">Hand<span class="text-indigo-600">AI</span></h1>
+            <div class="flex items-center gap-2 mt-1">
+                <div id="statusDot" class="status-dot"></div>
+                <span id="statusText" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Initializing...</span>
+            </div>
+        </div>
+        <div class="flex gap-2 items-center">
+            <div id="modeTag" style="display:none" class="glass-light px-3 py-1 rounded-full">
+                <span class="text-[10px] font-bold text-amber-600 uppercase tracking-widest">DEMO MODE</span>
+            </div>
+            <button onclick="switchCamera()" class="p-3 rounded-full glass-light text-indigo-600 shadow-sm btn-touch">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col md:flex-row p-4 gap-4 max-w-7xl mx-auto w-full pb-6">
+        <div class="w-full md:flex-[2]">
+            <div class="video-wrapper shadow-2xl shadow-indigo-200/50">
+                <video id="video" autoplay playsinline class="w-full h-full object-cover mirror"></video>
+                <div class="scan-line" id="scanLine"></div>
+                <div class="absolute bottom-4 left-4 right-4 flex justify-between items-center md:hidden">
+                    <div class="glass-light px-3 py-1.5 rounded-xl">
+                        <p id="latencyMobile" class="text-[10px] font-bold text-indigo-600">-- ms</p>
+                    </div>
+                    <button id="analyzeBtn" onclick="analyzeNow()" class="bg-indigo-600 text-white text-sm font-bold px-5 py-2 rounded-xl shadow btn-touch">Analyze</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full md:flex-1 flex flex-col gap-4">
+            <div class="glass-light rounded-[32px] p-6 md:p-8 flex flex-col items-center justify-center flex-1 shadow-sm">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Detected Sign</span>
+                <div id="result" class="text-7xl md:text-8xl font-black text-slate-800 my-2">?</div>
+                <div id="resultLabel" class="text-sm font-semibold text-slate-500 mb-2 min-h-[20px]"></div>
+                <div class="w-full mt-4">
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-xs font-bold text-slate-500">Confidence</span>
+                        <span id="confVal" class="text-indigo-600 font-extrabold">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-200/50 h-3 rounded-full overflow-hidden border border-white/50">
+                        <div id="confBar" class="bg-gradient-to-r from-indigo-400 to-purple-400 h-full transition-all duration-500 rounded-full" style="width:0%"></div>
+                    </div>
+                </div>
+                <button id="analyzeBtnDesktop" onclick="analyzeNow()" class="hidden md:flex items-center gap-2 mt-5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-6 py-3 rounded-xl shadow btn-touch">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 3l14 9-14 9V3z"/></svg>
+                    Analyze Frame
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-light rounded-2xl p-4 shadow-sm">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Latency</p>
+                    <p id="latencyPc" class="text-indigo-600 font-bold text-sm mt-1">-- ms</p>
+                </div>
+                <div class="glass-light rounded-2xl p-4 shadow-sm">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Engine</p>
+                    <p id="engineLabel" class="text-indigo-600 font-bold text-sm mt-1">Claude AI</p>
+                </div>
+                <div class="glass-light rounded-2xl p-4 shadow-sm">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Frames</p>
+                    <p id="frameCount" class="text-indigo-600 font-bold text-sm mt-1">0</p>
+                </div>
+                <div class="glass-light rounded-2xl p-4 shadow-sm">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Mode</p>
+                    <p id="modeLabel" class="text-indigo-600 font-bold text-sm mt-1">Live</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    <canvas id="canvas" style="display:none"></canvas>
+</div>
+
+<script>
+    var apiKey = '';
+    var isDemoMode = false;
+    var currentFacingMode = 'user';
+    var isAnalyzing = false;
+    var frameCount = 0;
+    var autoInterval = null;
+
+    var DEMO_SIGNS = [
+        { label: 'ก', name: 'กอ ไก่', conf: 88 },
+        { label: 'ข', name: 'ขอ ไข่', conf: 76 },
+        { label: 'ค', name: 'คอ ควาย', conf: 91 },
+        { label: 'ง', name: 'งอ งู', conf: 83 },
+        { label: 'จ', name: 'จอ จาน', conf: 79 },
+        { label: 'A', name: 'Letter A', conf: 95 },
+        { label: 'B', name: 'Letter B', conf: 87 },
+        { label: '👋', name: 'Hello / สวัสดี', conf: 94 },
+        { label: '✌️', name: 'Peace / โอเค', conf: 89 },
+    ];
+
+    // ---- SCREEN 1 ----
+    function handleEnter() {
+        var input = document.getElementById('apiKeyInput').value.trim();
+        if (!input) { showError('กรุณากรอก API Key ก่อน'); return; }
+        if (!input.startsWith('sk-ant-')) { showError('รูปแบบ API Key ไม่ถูกต้อง — ต้องขึ้นต้นด้วย sk-ant-...'); return; }
+        apiKey = input;
+        isDemoMode = false;
+        document.getElementById('apiError').style.display = 'none';
+        launchApp();
+    }
+
+    function enterDemoMode() {
+        apiKey = '';
+        isDemoMode = true;
+        launchApp();
+    }
+
+    function showError(msg) {
+        document.getElementById('apiErrorText').textContent = msg;
+        document.getElementById('apiError').style.display = 'block';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var inp = document.getElementById('apiKeyInput');
+        if (inp) inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleEnter(); });
+    });
+
+    // ---- LAUNCH (called by Flutter injection OR by form submit) ----
+    function launchApp() {
+        document.getElementById('apiScreen').style.display = 'none';
+        var app = document.getElementById('appScreen');
+        app.classList.remove('hidden');
+        app.style.display = 'flex';
+
+        if (isDemoMode) {
+            document.getElementById('modeTag').style.display = 'flex';
+            document.getElementById('modeLabel').textContent = 'Demo';
+            document.getElementById('engineLabel').textContent = 'Simulated';
+            setStatus('Demo Mode', 'connected');
+            startAutoDemo();
+        } else {
+            document.getElementById('engineLabel').textContent = 'Claude Haiku';
+            setStatus('Camera ready', 'connected');
+        }
+        startCamera();
+    }
+
+    // ---- CAMERA ----
+    var video = document.getElementById('video');
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+    function startCamera() {
+        if (video.srcObject) video.srcObject.getTracks().forEach(function(t) { t.stop(); });
+        setStatus('Starting camera...', '');
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: currentFacingMode, width: { ideal: 640 }, height: { ideal: 480 } }
+        }).then(function(stream) {
+            video.srcObject = stream;
+            video.classList.toggle('mirror', currentFacingMode === 'user');
+            setStatus(isDemoMode ? 'Demo Mode' : 'Ready', 'connected');
+        }).catch(function(err) {
+            setStatus('Camera Error: ' + err.name, 'error');
+        });
+    }
+
+    function switchCamera() {
+        currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+        startCamera();
+    }
+
+    function captureFrame() {
+        if (video.readyState < video.HAVE_ENOUGH_DATA) return null;
+        canvas.width = 320;
+        canvas.height = Math.round((video.videoHeight / video.videoWidth) * 320) || 240;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+    }
+
+    // ---- ANALYZE ----
+    function analyzeNow() {
+        if (isAnalyzing) return;
+        isAnalyzing = true;
+        var btnA = document.getElementById('analyzeBtn');
+        var btnB = document.getElementById('analyzeBtnDesktop');
+        var scanLine = document.getElementById('scanLine');
+        if (btnA) btnA.innerHTML = '<span class="spinner"></span>';
+        if (btnB) btnB.innerHTML = '<span class="spinner" style="width:16px;height:16px;margin-right:8px;"></span> Analyzing...';
+        scanLine.classList.add('active');
+        setStatus('Analyzing...', '');
+        var t0 = Date.now();
+
+        if (isDemoMode) {
+            setTimeout(function() {
+                var pick = DEMO_SIGNS[Math.floor(Math.random() * DEMO_SIGNS.length)];
+                applyResult(pick.label, pick.name, pick.conf, Date.now() - t0);
+                isAnalyzing = false;
+                scanLine.classList.remove('active');
+                if (btnA) btnA.textContent = 'Analyze';
+                if (btnB) btnB.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 3l14 9-14 9V3z"/></svg> Analyze Frame';
+            }, 600 + Math.random() * 800);
+            return;
+        }
+
+        var b64 = captureFrame();
+        if (!b64) {
+            setStatus('No camera frame', 'error');
+            isAnalyzing = false;
+            scanLine.classList.remove('active');
+            if (btnA) btnA.textContent = 'Analyze';
+            if (btnB) btnB.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 3l14 9-14 9V3z"/></svg> Analyze Frame';
+            return;
+        }
+
+        fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01',
+                'anthropic-dangerous-direct-browser-access': 'true'
+            },
+            body: JSON.stringify({
+                model: 'claude-haiku-4-5-20251001',
+                max_tokens: 80,
+                messages: [{
+                    role: 'user',
+                    content: [
+                        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
+                        { type: 'text', text: 'Look at the hand gesture in this image. Identify any sign language letter, number, or gesture. Respond with ONLY valid JSON: {"label":"A","name":"Letter A","confidence":85}\nIf no clear gesture: {"label":"?","name":"No gesture","confidence":0}' }
+                    ]
+                }]
+            })
+        }).then(function(res) {
+            return res.json().then(function(data) {
+                if (!res.ok) throw new Error((data.error && data.error.message) || ('HTTP ' + res.status));
+                return data;
+            });
+        }).then(function(data) {
+            var raw = (data.content && data.content[0] && data.content[0].text) || '{}';
+            var parsed;
+            try { parsed = JSON.parse(raw.trim()); } catch(e) { parsed = { label: '?', name: 'Parse error', confidence: 0 }; }
+            applyResult(parsed.label || '?', parsed.name || '', Math.round(parsed.confidence || 0), Date.now() - t0);
+        }).catch(function(err) {
+            setStatus('Error: ' + err.message.slice(0, 40), 'error');
+            setResult('!', err.message.slice(0, 40), 0);
+        }).finally(function() {
+            isAnalyzing = false;
+            scanLine.classList.remove('active');
+            if (btnA) btnA.textContent = 'Analyze';
+            if (btnB) btnB.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 3l14 9-14 9V3z"/></svg> Analyze Frame';
+        });
+    }
+
+    function applyResult(label, name, confidence, latencyMs) {
+        frameCount++;
+        setResult(label, name, confidence);
+        var ms = latencyMs + ' ms';
+        document.getElementById('latencyPc').textContent = ms;
+        document.getElementById('latencyMobile').textContent = ms;
+        document.getElementById('frameCount').textContent = frameCount;
+        setStatus('Ready', 'connected');
+    }
+
+    function setResult(label, name, confidence) {
+        var el = document.getElementById('result');
+        el.textContent = label;
+        el.classList.remove('pop');
+        void el.offsetWidth;
+        el.classList.add('pop');
+        document.getElementById('resultLabel').textContent = name;
+        document.getElementById('confVal').textContent = confidence + '%';
+        document.getElementById('confBar').style.width = confidence + '%';
+    }
+
+    function setStatus(text, state) {
+        document.getElementById('statusText').textContent = text;
+        var dot = document.getElementById('statusDot');
+        dot.className = 'status-dot' + (state ? ' ' + state : '');
+    }
+
+    function startAutoDemo() {
+        autoInterval = setInterval(function() {
+            if (!isAnalyzing) analyzeNow();
+        }, 3000);
+    }
+</script>
+</body>
+</html>
